@@ -1,6 +1,7 @@
 import { PlanetData, SystemStatus } from '../data/types';
 import { Scan, Zap, Crosshair } from 'lucide-react';
 import { FlightState } from './GalaxyViewport';
+import { ART_DIRECTION } from '../data/artDirection';
 
 interface CommandDeckProps {
   nearbyPlanet: PlanetData | null;
@@ -21,12 +22,12 @@ export default function CommandDeck({
   const isInRange = nearbyDistance < proximityThreshold;
 
   return (
-    <div className="fixed bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
-      <div className="flex items-center gap-2 px-4 py-2" style={{
-        background: 'linear-gradient(180deg, rgba(10,14,39,0.9) 0%, rgba(2,5,16,0.95) 100%)',
-        border: '1px solid rgba(0,229,255,0.12)',
-        borderBottom: '1px solid rgba(0,229,255,0.2)',
-        boxShadow: '0 0 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(0,229,255,0.05)',
+    <div className="fixed bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-auto max-w-[calc(100vw-1rem)]">
+      <div className="flex flex-wrap items-center justify-center gap-2 px-4 py-2 backdrop-blur-xl" style={{
+        background: 'linear-gradient(180deg, rgba(10,14,39,0.82) 0%, rgba(2,5,16,0.94) 100%)',
+        border: '1px solid rgba(246,240,255,0.1)',
+        borderBottom: `1px solid ${ART_DIRECTION.palette.amber}30`,
+        boxShadow: '0 0 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,215,64,0.08), 0 0 34px rgba(0,229,255,0.06)',
         clipPath: 'polygon(6px 0%, 100% 0%, 100% 100%, calc(100% - 6px) 100%, 0% 100%, 0% 6px)',
       }}>
         {/* Proximity status */}
@@ -95,7 +96,7 @@ export default function CommandDeck({
         {/* Boost indicator */}
         <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
-        <span className="font-mono text-[8px] text-white/20">
+        <span className="font-mono text-[8px] text-white/20 whitespace-nowrap">
           SHIFT:BOOST · Q/E:UP/DN · SPACE:BRAKE · CLICK TO STEER
         </span>
       </div>

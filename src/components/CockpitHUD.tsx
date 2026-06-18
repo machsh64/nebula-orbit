@@ -12,6 +12,8 @@ interface CockpitHUDProps {
   systemStatus: SystemStatus;
 }
 
+const SPEED_BAR_HEIGHTS = Array.from({ length: 20 }, (_, i) => 4 + (i % 5) * 1.25 + Math.sin(i * 1.7) * 0.6);
+
 // ---- Angular HUD panel (shared) ----
 function HUDPanel({ children, glowColor = '#00e5ff', className = '' }: {
   children: React.ReactNode;
@@ -116,7 +118,7 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== TOP-LEFT: NAV DATA ===== */}
-      <div className="fixed top-3 left-3 z-30 pointer-events-none">
+      <div className="fixed top-3 left-3 z-30 pointer-events-none max-sm:origin-top-left max-sm:scale-[0.82]">
         <HUDPanel glowColor="#00e5ff">
           <div className="px-3 py-2 font-mono text-[9px] space-y-1 w-56">
             <div className="flex items-center justify-between mb-1">
@@ -148,7 +150,7 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== TOP-RIGHT: SYS STATUS ===== */}
-      <div className="fixed top-3 right-3 z-30 pointer-events-none">
+      <div className="fixed top-3 right-3 z-30 pointer-events-none max-sm:top-[8.75rem] max-sm:origin-top-right max-sm:scale-[0.82]">
         <HUDPanel glowColor={statusColor}>
           <div className="px-3 py-2 font-mono text-[9px] space-y-1 w-44">
             <div className="flex items-center justify-between mb-1">
@@ -170,7 +172,7 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== LEFT: PROXIMITY MONITOR ===== */}
-      <div className="fixed left-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none" style={{ marginTop: -40 }}>
+      <div className="fixed left-3 top-1/2 z-30 hidden -translate-y-1/2 pointer-events-none md:block" style={{ marginTop: -40 }}>
         <HUDPanel glowColor={isInRange ? '#ffd740' : '#00e5ff'}>
           <div className="px-3 py-2 w-44">
             <div className="text-[8px] font-mono text-white/25 tracking-[0.2em] text-center mb-2">
@@ -208,7 +210,7 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== RIGHT: TARGET INFO (when in range) ===== */}
-      <div className="fixed right-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none" style={{ marginTop: -40 }}>
+      <div className="fixed right-3 top-1/2 z-30 hidden -translate-y-1/2 pointer-events-none md:block" style={{ marginTop: -40 }}>
         {nearbyPlanet && isProximity ? (
           <HUDPanel glowColor={nearbyPlanet.glowColor}>
             <div className="px-3 py-3 w-64 space-y-2">
@@ -272,7 +274,7 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== BOTTOM-RIGHT: RADAR ===== */}
-      <div className="fixed bottom-3 right-3 z-30 pointer-events-none">
+      <div className="fixed bottom-3 right-3 z-30 hidden pointer-events-none sm:block">
         <RadarMinimap planets={PLANETS} nearbyPlanetId={nearbyPlanet?.id ?? null} heading={flightState.heading} />
       </div>
 
@@ -316,12 +318,12 @@ function SpeedIndicator({ speed, isBoosting, maxSpeed, boostMult }: {
   const color = isBoosting ? '#ff4081' : '#00e5ff';
 
   return (
-    <div className="fixed bottom-[4.5rem] left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+    <div className="fixed bottom-[11rem] left-1/2 z-30 -translate-x-1/2 pointer-events-none sm:bottom-[4.5rem]">
       <div className="flex items-center gap-2">
         <div className="flex items-end h-8 gap-[1px]">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {SPEED_BAR_HEIGHTS.map((height, i) => (
             <div key={i} className="w-1 rounded-t transition-all duration-100" style={{
-              height: `${4 + Math.random() * 0.1}px`,
+              height: `${height}px`,
               background: pct > i * 5 ? color : 'rgba(255,255,255,0.06)',
               boxShadow: pct > i * 5 ? `0 0 4px ${color}80` : 'none',
             }} />

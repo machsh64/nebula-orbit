@@ -10,6 +10,7 @@ import BootSequence from './BootSequence';
 import CustomCursor from './CustomCursor';
 import DeepScanSystem from './DeepScanSystem';
 import WarpJumpSystem from './WarpJumpSystem';
+import CinematicVeil from './CinematicVeil';
 import gsap from 'gsap';
 
 export default function SpaceShowcasePage() {
@@ -143,6 +144,12 @@ export default function SpaceShowcasePage() {
           nearbyPlanet={nearbyPlanet}
           nearbyDistance={nearbyDistance}
           systemStatus={systemStatus}
+        />
+
+        <CinematicVeil
+          systemStatus={systemStatus}
+          nearbyPlanet={nearbyPlanet}
+          flightState={flightState}
         />
 
         {/* === BOTTOM: Simplified Command Deck === */}
