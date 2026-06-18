@@ -1,71 +1,100 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlanetData, SystemStatus } from '../data/types';
-import { PLANETS } from '../data/planets';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import StarfieldBackground from './StarfieldBackground';
 import NebulaBackdrop from './NebulaBackdrop';
-import GalaxyViewport from './GalaxyViewport';
+import GalaxyViewport, { FlightState } from './GalaxyViewport';
 import CockpitHUD from './CockpitHUD';
 import CommandDeck from './CommandDeck';
 import BootSequence from './BootSequence';
 import CustomCursor from './CustomCursor';
 import DeepScanSystem from './DeepScanSystem';
 import WarpJumpSystem from './WarpJumpSystem';
-import TargetLockOverlay from './TargetLockOverlay';
 import gsap from 'gsap';
 
 export default function SpaceShowcasePage() {
   const [bootComplete, setBootComplete] = useState(false);
-  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData>(PLANETS[0]);
-  const [lockedPlanet, setLockedPlanet] = useState<PlanetData | null>(null);
-  const [hoveredPlanet, setHoveredPlanet] = useState<PlanetData | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>('idle');
-  const [autoOrbit, setAutoOrbit] = useState(false);
   const [scanActive, setScanActive] = useState(false);
   const [warpActive, setWarpActive] = useState(false);
-  const [lockAnimActive, setLockAnimActive] = useState(false);
-  const [cameraZoom, setCameraZoom] = useState(18);
-  const controlsRef = useRef<any>(null);
-  const zoomRef = useRef(18);
+  const [nearbyPlanet, setNearbyPlanet] = useState<PlanetData | null>(null);
+  const [nearbyDistance, setNearbyDistance] = useState(Infinity);
+  const [flightState, setFlightState] = useState<FlightState>({
+    velocity: { x: 0, y: 0, z: 0 } as any,
+    speed: 0,
+    heading: 0,
+    pitch: 0,
+    isBoosting: false,
+  });
+
   const reducedMotion = useReducedMotion();
+  const inputRef = useRef<{
+    keys: Set<string>;
+    mouse: { dx: number; dy: number };
+  }>({ keys: new Set(), mouse: { dx: 0, dy: 0 } });
+  const warpTargetRef = useRef<string | null>(null);
 
-  // === Planet Selection / Lock ===
-  const handleSelectPlanet = useCallback((planet: PlanetData) => {
-    setSelectedPlanet(planet);
-    if (lockedPlanet) {
-      // If already locked on something, transition to new lock
-      setLockedPlanet(null);
-      setSystemStatus('idle');
-      setTimeout(() => {
-        setLockedPlanet(planet);
-        setSystemStatus('locked');
-        setLockAnimActive(true);
-      }, 400);
-    } else {
-      setLockedPlanet(planet);
-      setSystemStatus('locked');
-      setLockAnimActive(true);
-    }
-  }, [lockedPlanet]);
+  // Track whether we're in scanning range for current target
+  const isInRange = nearbyDistance < 3;
 
-  const handleUnlock = useCallback(() => {
-    setLockedPlanet(null);
-    setSystemStatus('idle');
-  }, []);
+  // ---- Keyboard Input Handler ----
+  useEffect(() => {
+    if (!bootComplete) return;
 
-  // === Deep Scan ===
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      inputRef.current.keys.add(e.code);
+
+      // WASD/Arrows are handled by flight system
+      // E = interact/scan when in range
+      if (e.code === 'KeyE' && isInRange && nearbyPlanet && systemStatus !== 'scanning' && systemStatus !== 'warping') {
+        handleDeepScan();
+      }
+      // F = warp when in range (or always)
+      if (e.code === 'KeyF' && systemStatus !== 'warping' && systemStatus !== 'scanning') {
+        handleWarpJump();
+      }
+      // Shift = boost (handled in flight system)
+      // Space = brake (handled in flight system)
+      // Q = down, R = up (handled in flight system)
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      inputRef.current.keys.delete(e.code);
+    };
+
+    // Mouse movement for looking
+    const handleMouseMove = (e: MouseEvent) => {
+      if (document.pointerLockElement) {
+        inputRef.current.mouse.dx += e.movementX;
+        inputRef.current.mouse.dy += e.movementY;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [bootComplete, isInRange, nearbyPlanet, systemStatus]);
+
+  // ---- Actions ----
+
   const handleDeepScan = useCallback(() => {
-    if (!lockedPlanet || systemStatus === 'scanning' || systemStatus === 'warping') return;
+    if (!nearbyPlanet || systemStatus === 'scanning' || systemStatus === 'warping') return;
     setSystemStatus('scanning');
     setScanActive(true);
-  }, [lockedPlanet, systemStatus]);
+  }, [nearbyPlanet, systemStatus]);
 
   const handleScanComplete = useCallback(() => {
     setScanActive(false);
-    setSystemStatus('locked');
+    setSystemStatus('idle');
   }, []);
 
-  // === Warp Jump ===
   const handleWarpJump = useCallback(() => {
     if (systemStatus === 'warping' || systemStatus === 'scanning') return;
     setSystemStatus('warping');
@@ -74,74 +103,11 @@ export default function SpaceShowcasePage() {
 
   const handleWarpComplete = useCallback((target: PlanetData) => {
     setWarpActive(false);
-    setSelectedPlanet(target);
-    // Auto-lock on warp arrival
-    setTimeout(() => {
-      setLockedPlanet(target);
-      setSystemStatus('locked');
-      setLockAnimActive(true);
-    }, 600);
+    setSystemStatus('idle');
+    warpTargetRef.current = target.id;
   }, []);
 
-  // === Auto Orbit ===
-  useEffect(() => {
-    if (!autoOrbit || !bootComplete) return;
-    const interval = setInterval(() => {
-      const currentIdx = PLANETS.findIndex(p => p.id === (lockedPlanet?.id ?? selectedPlanet?.id));
-      const nextIdx = (currentIdx + 1) % PLANETS.length;
-      const next = PLANETS[nextIdx];
-      setSelectedPlanet(next);
-      setLockedPlanet(next);
-      setSystemStatus('locked');
-      setLockAnimActive(true);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [autoOrbit, bootComplete, lockedPlanet, selectedPlanet]);
-
-  // === Keyboard Shortcuts ===
-  useEffect(() => {
-    if (!bootComplete) return;
-
-    const handleKey = (e: KeyboardEvent) => {
-      // Don't intercept when typing in inputs
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
-
-      const currentIdx = PLANETS.findIndex(p => p.id === (lockedPlanet?.id ?? selectedPlanet?.id));
-
-      switch (e.key.toLowerCase()) {
-        case 'a':
-        case 'arrowleft': {
-          const prev = (currentIdx - 1 + PLANETS.length) % PLANETS.length;
-          handleSelectPlanet(PLANETS[prev]);
-          break;
-        }
-        case 'd':
-        case 'arrowright': {
-          const next = (currentIdx + 1) % PLANETS.length;
-          handleSelectPlanet(PLANETS[next]);
-          break;
-        }
-        case ' ': {
-          e.preventDefault();
-          handleDeepScan();
-          break;
-        }
-        case 'w': {
-          handleWarpJump();
-          break;
-        }
-        case 'escape': {
-          handleUnlock();
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [bootComplete, lockedPlanet, selectedPlanet, handleSelectPlanet, handleDeepScan, handleWarpJump, handleUnlock]);
-
-  // === Boot Complete Handler ===
+  // ---- Boot ----
   const handleBootComplete = useCallback(() => {
     setBootComplete(true);
     if (!reducedMotion) {
@@ -149,79 +115,58 @@ export default function SpaceShowcasePage() {
     }
   }, [reducedMotion]);
 
-  const activePlanet = lockedPlanet || selectedPlanet;
-
   return (
     <div className="relative w-screen h-screen bg-[#020510] overflow-hidden">
-      {/* Boot Sequence */}
       {!bootComplete && <BootSequence onComplete={handleBootComplete} />}
 
-      {/* Background layers */}
       <StarfieldBackground />
       <NebulaBackdrop />
-
-      {/* Scan line overlay */}
       <div className="scan-line-overlay" />
 
-      {/* Main cockpit container — fades in after boot */}
       <div className={`cockpit-fade-in w-full h-full ${bootComplete ? 'opacity-100' : 'opacity-0'}`}>
-        {/* === CENTER: 3D Galaxy Viewport === */}
+        {/* === CENTER: 3D First-Person Galaxy === */}
         <GalaxyViewport
-          lockedPlanetId={lockedPlanet?.id ?? null}
-          scanningPlanetId={scanActive ? lockedPlanet?.id ?? null : null}
-          targetedPlanetId={hoveredPlanet?.id ?? null}
-          onPlanetClick={handleSelectPlanet}
-          onPlanetHover={setHoveredPlanet}
-          onCameraMove={setCameraZoom}
-          controlsRef={controlsRef}
-          zoomRef={zoomRef}
+          onFlightUpdate={setFlightState}
+          onNearbyPlanet={(p, d) => {
+            setNearbyPlanet(p);
+            setNearbyDistance(d);
+          }}
+          scanningPlanetId={scanActive ? nearbyPlanet?.id ?? null : null}
+          inputRef={inputRef}
+          warpTargetRef={warpTargetRef}
         />
 
-        {/* === HUD OVERLAY === */}
+        {/* === HUD OVERLAY: Flight Instruments === */}
         <CockpitHUD
-          lockedPlanet={lockedPlanet}
-          targetedPlanet={hoveredPlanet}
-          hoveredPlanet={hoveredPlanet}
+          flightState={flightState}
+          nearbyPlanet={nearbyPlanet}
+          nearbyDistance={nearbyDistance}
           systemStatus={systemStatus}
-          cameraZoom={cameraZoom}
-          onSelectPlanet={handleSelectPlanet}
-          onDeepScan={handleDeepScan}
-          onWarpJump={handleWarpJump}
-          onUnlock={handleUnlock}
         />
 
-        {/* === BOTTOM: Command Deck === */}
+        {/* === BOTTOM: Simplified Command Deck === */}
         <CommandDeck
-          selectedPlanet={selectedPlanet}
-          lockedPlanet={lockedPlanet}
+          nearbyPlanet={nearbyPlanet}
+          nearbyDistance={nearbyDistance}
           systemStatus={systemStatus}
-          autoOrbit={autoOrbit}
-          onSelectPlanet={handleSelectPlanet}
           onDeepScan={handleDeepScan}
           onWarpJump={handleWarpJump}
-          onToggleAutoOrbit={() => setAutoOrbit(prev => !prev)}
-          onUnlock={handleUnlock}
+          flightState={flightState}
         />
 
-        {/* === EFFECTS OVERLAYS === */}
-        <TargetLockOverlay
-          active={lockAnimActive}
-          planet={lockedPlanet}
-          onComplete={() => setLockAnimActive(false)}
-        />
+        {/* === EFFECTS === */}
         <DeepScanSystem
           active={scanActive}
-          planet={lockedPlanet}
+          planet={nearbyPlanet}
           onComplete={handleScanComplete}
         />
         <WarpJumpSystem
           active={warpActive}
-          currentPlanet={activePlanet}
+          currentPlanet={nearbyPlanet}
           onComplete={handleWarpComplete}
         />
       </div>
 
-      {/* Custom Cursor */}
       <CustomCursor />
     </div>
   );
