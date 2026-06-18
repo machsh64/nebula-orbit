@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { BOOT_SEQUENCE_STEPS } from '../data/planets';
+import { ART_DIRECTION } from '../data/artDirection';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
 interface BootSequenceProps {
@@ -66,29 +67,37 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[100] bg-[#020510] flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[100] bg-[#020510] flex flex-col items-center justify-center overflow-hidden"
     >
+      <div className="absolute inset-0 opacity-70" style={{
+        background: 'radial-gradient(circle at 50% 42%, rgba(0,229,255,0.16), transparent 30%), linear-gradient(120deg, rgba(255,215,64,0.05), transparent 36%, rgba(255,64,129,0.06))',
+      }} />
+      <div className="absolute inset-x-0 top-1/2 h-px opacity-30" style={{ background: 'linear-gradient(90deg, transparent, #00e5ff, #ffd740, #ff4081, transparent)' }} />
+
       {/* Central logo */}
-      <div className="mb-12 text-center">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-full border border-white/10 flex items-center justify-center relative">
+      <div className="relative z-10 mb-12 text-center">
+        <div className="w-28 h-28 mx-auto mb-6 rounded-full border border-white/10 flex items-center justify-center relative">
           <div className="absolute inset-0 rounded-full animate-ping opacity-20"
             style={{ background: 'radial-gradient(circle, #00e5ff, transparent)' }} />
+          <div className="absolute -inset-5 rounded-full opacity-40" style={{ border: `1px solid ${ART_DIRECTION.palette.amber}55` }} />
+          <div className="absolute -inset-9 rounded-full opacity-25" style={{ border: `1px solid ${ART_DIRECTION.palette.magenta}55`, transform: 'rotate(18deg) scaleX(1.18)' }} />
           <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="14" stroke="#00e5ff" strokeWidth="1" fill="none" opacity="0.6" />
             <circle cx="16" cy="16" r="8" stroke="#b388ff" strokeWidth="0.8" fill="none" opacity="0.4" />
-            <circle cx="16" cy="16" r="3" fill="#00e5ff" opacity="0.8" />
+            <path d="M6 17C10 9 21 8 26 15" stroke="#ffd740" strokeWidth="0.7" opacity="0.7" />
+            <circle cx="16" cy="16" r="3" fill="#f6f0ff" opacity="0.9" />
           </svg>
         </div>
         <h1 className="text-2xl font-mono font-bold tracking-[0.3em] text-glow-cyan mb-2">
           NEBULA ORBIT
         </h1>
         <p className="text-[10px] font-mono text-white/30 tracking-[0.4em] uppercase">
-          Interstellar Planetary Archive
+          {ART_DIRECTION.callsign}
         </p>
       </div>
 
       {/* Boot log */}
-      <div ref={logRef} className="w-96 space-y-2 font-mono text-xs">
+      <div ref={logRef} className="relative z-10 w-96 max-w-[calc(100vw-2rem)] space-y-2 font-mono text-xs">
         {BOOT_SEQUENCE_STEPS.map((step, i) => {
           const isVisible = i <= currentStep;
           const isComplete = i < currentStep;
@@ -127,7 +136,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       </div>
 
       {/* Progress bar */}
-      <div className={`mt-8 w-64 transition-opacity duration-300 ${showProgress ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`relative z-10 mt-8 w-64 transition-opacity duration-300 ${showProgress ? 'opacity-100' : 'opacity-0'}`}>
         <div className="h-[2px] bg-white/5 rounded-full overflow-hidden">
           <div
             className="h-full transition-all duration-100 rounded-full"

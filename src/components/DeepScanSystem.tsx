@@ -87,7 +87,7 @@ export default function DeepScanSystem({ active, planet, onComplete }: DeepScanS
       )}
 
       {/* Scan data readout */}
-      <div className="absolute right-[380px] top-1/2 -translate-y-1/2 z-10">
+      <div className="absolute right-[min(380px,28vw)] top-1/2 -translate-y-1/2 z-10 max-w-[23rem]">
         <div className="space-y-1.5">
           {scanStage >= 1 && (
             <p className="font-mono text-xs font-bold tracking-[0.2em]" style={{
@@ -112,6 +112,21 @@ export default function DeepScanSystem({ active, planet, onComplete }: DeepScanS
               )}
             </div>
           ))}
+
+          {scanStage === 3 && (
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <div className="mb-2 h-px w-full" style={{
+                background: `linear-gradient(90deg, transparent, ${planet.glowColor}, #ffd740, transparent)`,
+              }} />
+              <p className="max-w-xs text-[10px] leading-relaxed text-white/45">
+                {planet.description}
+              </p>
+              <div className="mt-2 inline-flex items-center gap-2 rounded-sm border border-white/10 bg-white/[0.03] px-2 py-1 font-mono text-[8px]" style={{ color: planet.glowColor }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: planet.glowColor, boxShadow: `0 0 8px ${planet.glowColor}` }} />
+                ARCHIVE PLATE SEALED
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

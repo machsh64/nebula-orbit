@@ -1,20 +1,25 @@
 import { useEffect, useRef } from 'react';
+import { ART_DIRECTION } from '../data/artDirection';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
-interface NebulaBlob {
-  x: number;
+interface NebulaRibbon {
   y: number;
-  radius: number;
-  color1: string;
-  color2: string;
+  height: number;
+  colorA: string;
+  colorB: string;
   alpha: number;
-  speedX: number;
-  speedY: number;
+  drift: number;
+  phase: number;
 }
+
+const RIBBONS: NebulaRibbon[] = [
+  { y: 0.18, height: 0.34, colorA: '#00e5ff', colorB: '#ffd740', alpha: 0.18, drift: 0.00032, phase: 0.4 },
+  { y: 0.48, height: 0.42, colorA: '#b388ff', colorB: '#ff4081', alpha: 0.16, drift: -0.00024, phase: 2.1 },
+  { y: 0.74, height: 0.28, colorA: '#69f0ae', colorB: '#2979ff', alpha: 0.12, drift: 0.00018, phase: 3.5 },
+];
 
 export default function NebulaBackdrop() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const blobsRef = useRef<NebulaBlob[]>([]);
   const animRef = useRef<number>(0);
   const reducedMotion = useReducedMotion();
 
@@ -25,82 +30,83 @@ export default function NebulaBackdrop() {
     if (!ctx) return;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initBlobs();
-    };
-
-    const initBlobs = () => {
-      const w = canvas.width;
-      const h = canvas.height;
-      blobsRef.current = [
-        {
-          x: w * 0.25, y: h * 0.3, radius: Math.min(w, h) * 0.35,
-          color1: '#1a1040', color2: '#0a0e27',
-          alpha: 0.4, speedX: 0.1, speedY: -0.05,
-        },
-        {
-          x: w * 0.7, y: h * 0.6, radius: Math.min(w, h) * 0.4,
-          color1: '#2d1b69', color2: '#020510',
-          alpha: 0.35, speedX: -0.08, speedY: 0.06,
-        },
-        {
-          x: w * 0.5, y: h * 0.2, radius: Math.min(w, h) * 0.3,
-          color1: '#0d1b3e', color2: '#1a1040',
-          alpha: 0.3, speedX: 0.05, speedY: 0.08,
-        },
-        {
-          x: w * 0.15, y: h * 0.7, radius: Math.min(w, h) * 0.25,
-          color1: '#311b92', color2: '#0a0e27',
-          alpha: 0.25, speedX: 0.07, speedY: -0.04,
-        },
-        {
-          x: w * 0.85, y: h * 0.25, radius: Math.min(w, h) * 0.28,
-          color1: '#1a1040', color2: '#2d1b69',
-          alpha: 0.3, speedX: -0.06, speedY: -0.07,
-        },
-      ];
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
     resize();
     window.addEventListener('resize', resize);
 
     let time = 0;
+    const drawRibbon = (ribbon: NebulaRibbon, width: number, height: number) => {
+      const y = height * ribbon.y;
+      const ribbonHeight = height * ribbon.height;
+      const drift = reducedMotion ? 0 : Math.sin(time * ribbon.drift + ribbon.phase) * width * 0.08;
+
+      const gradient = ctx.createLinearGradient(0, y - ribbonHeight * 0.5, width, y + ribbonHeight * 0.5);
+      gradient.addColorStop(0, 'transparent');
+      gradient.addColorStop(0.22, ribbon.colorA);
+      gradient.addColorStop(0.52, ribbon.colorB);
+      gradient.addColorStop(0.8, ART_DIRECTION.palette.cyan);
+      gradient.addColorStop(1, 'transparent');
+
+      ctx.save();
+      ctx.globalAlpha = ribbon.alpha;
+      ctx.filter = 'blur(32px)';
+      ctx.beginPath();
+      ctx.moveTo(-width * 0.1, y + Math.sin(time * 0.001 + ribbon.phase) * 18);
+      ctx.bezierCurveTo(
+        width * 0.2 + drift,
+        y - ribbonHeight * 0.65,
+        width * 0.55 - drift,
+        y + ribbonHeight * 0.8,
+        width * 1.1,
+        y - ribbonHeight * 0.2
+      );
+      ctx.lineTo(width * 1.1, y + ribbonHeight * 0.6);
+      ctx.bezierCurveTo(
+        width * 0.55 - drift,
+        y + ribbonHeight * 1.15,
+        width * 0.2 + drift,
+        y - ribbonHeight * 0.18,
+        -width * 0.1,
+        y + ribbonHeight * 0.52
+      );
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    };
+
     const animate = () => {
-      time++;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += reducedMotion ? 0.25 : 1;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
 
-      for (const blob of blobsRef.current) {
-        if (!reducedMotion) {
-          blob.x += Math.sin(time * 0.001 + blob.speedX) * 0.3;
-          blob.y += Math.cos(time * 0.001 + blob.speedY) * 0.3;
-        }
+      ctx.clearRect(0, 0, width, height);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(2, 5, 16, 0.72)';
+      ctx.fillRect(0, 0, width, height);
 
-        const gradient = ctx.createRadialGradient(
-          blob.x, blob.y, 0,
-          blob.x, blob.y, blob.radius
-        );
-        gradient.addColorStop(0, blob.color1);
-        gradient.addColorStop(0.5, blob.color1);
-        gradient.addColorStop(1, 'transparent');
+      ctx.globalCompositeOperation = 'screen';
+      RIBBONS.forEach(ribbon => drawRibbon(ribbon, width, height));
 
-        ctx.beginPath();
-        ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = blob.alpha;
-        ctx.fill();
-      }
-
-      ctx.globalAlpha = 1;
-
-      // Add subtle noise grain overlay
-      if (time % 3 === 0) {
-        ctx.fillStyle = 'rgba(2, 5, 16, 0.02)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Fine grain keeps the canvas feeling tactile without becoming noisy.
+      ctx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < 80; i++) {
+        const x = (i * 137.5 + time * 0.12) % width;
+        const y = (i * 53.2 + time * 0.08) % height;
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(255, 215, 64, 0.025)' : 'rgba(246, 240, 255, 0.018)';
+        ctx.fillRect(x, y, 1, 1);
       }
 
       animRef.current = requestAnimationFrame(animate);
     };
+
     animate();
 
     return () => {

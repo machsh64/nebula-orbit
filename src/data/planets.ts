@@ -225,23 +225,23 @@ export const CORE_DATA = {
 };
 
 export const BOOT_SEQUENCE_STEPS = [
-  'INITIALIZING STELLAR MAP...',
+  'PRIMING CELESTIAL ATELIER...',
+  'MIXING SPECTRAL PIGMENTS...',
   'CALIBRATING ORBITAL LENS...',
-  'SYNCING DEEP SPACE SIGNAL...',
-  'LOADING PLANETARY DATABASE...',
-  'ESTABLISHING QUANTUM UPLINK...',
-  'SYSTEM ONLINE',
+  'THREADING CONSTELLATION LINES...',
+  'LOADING PLANETARY ARCHIVE...',
+  'HELM ONLINE',
 ];
 
 export const TERMINAL_LOGS = [
-  '> probe connected — sector 7G',
-  '> telemetry stream active',
-  '> anomaly detected at grid 114-88',
-  '> orbital lock established',
-  '> deep scan initiated',
-  '> quantum entanglement verified',
+  '> atelier lens warmed — sector 7G',
+  '> pigment telemetry active',
+  '> anomaly singing at grid 114-88',
+  '> orbital calligraphy locked',
+  '> deep scan preparing spectral plate',
+  '> quantum fold verified',
   '> signal integrity 99.97%',
-  '> receiving telemetry from KEPLER-7X',
-  '> gravitational wave detected',
+  '> receiving tides from KEPLER-7X',
+  '> gravitational brushstroke detected',
   '> new celestial body cataloged',
 ];
