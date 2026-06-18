@@ -31,19 +31,17 @@ export default function WarpJumpSystem({ active, currentPlanet, onComplete }: Wa
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (!active || !currentPlanet) return;
+    if (!active) return;
+    const targetPool = currentPlanet ? PLANETS.filter(p => p.id !== currentPlanet.id) : PLANETS;
+    const target = targetPool[Math.floor(Math.random() * targetPool.length)];
+
     if (reducedMotion) {
-      const others = PLANETS.filter(p => p.id !== currentPlanet.id);
-      const target = others[Math.floor(Math.random() * others.length)];
       onComplete(target);
       return;
     }
 
     const container = containerRef.current;
     if (!container) return;
-
-    const others = PLANETS.filter(p => p.id !== currentPlanet.id);
-    const target = others[Math.floor(Math.random() * others.length)];
 
     gsap.set(container, { opacity: 1 });
 
