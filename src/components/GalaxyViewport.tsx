@@ -5,7 +5,9 @@ import { PlanetData } from '../data/types';
 import { PLANETS } from '../data/planets';
 import Starfield3D from './Starfield3D';
 import OrbitSystem from './OrbitSystem';
+import CosmicAtelier from './CosmicAtelier';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { getPlanetOrbitPosition } from '../utils/orbits';
 
 const INITIAL_POS = new THREE.Vector3(0, 25, 65);
 const MAX_SPEED = 30;
@@ -70,7 +72,7 @@ function FlightCamera({
     };
   }, [camera, gl, reducedMotion]);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     // Clamp delta to avoid huge jumps on tab-away
     const dt = Math.min(delta, 0.1);
     const input = inputRef.current;
@@ -130,13 +132,8 @@ function FlightCamera({
     if (warpTargetId) {
       const target = PLANETS.find(p => p.id === warpTargetId);
       if (target) {
-        const now = Date.now() * 0.001;
-        const angle = now * target.orbitSpeed * 0.5;
-        const px = Math.cos(angle) * target.orbitRadius;
-        const pz = Math.sin(angle) * target.orbitRadius;
-        const py = Math.sin(angle) * target.orbitInclination * 2;
         // Teleport to just outside the planet, facing toward it
-        const planetPos = new THREE.Vector3(px, py, pz);
+        const planetPos = getPlanetOrbitPosition(target, clock.elapsedTime);
         const toCenter = new THREE.Vector3().copy(planetPos).normalize().multiplyScalar(-1);
         const arrivalPos = planetPos.clone().add(toCenter.multiplyScalar(target.size * 2 + 3));
         camera.position.copy(arrivalPos);
@@ -155,15 +152,9 @@ function FlightCamera({
 
     const camPos = camera.position;
     // For each planet, compute its current 3D orbit position
-    const now = Date.now() * 0.001;
     for (const p of PLANETS) {
-      const angle = now * p.orbitSpeed * 0.5;
-      const px = Math.cos(angle) * p.orbitRadius;
-      const pz = Math.sin(angle) * p.orbitRadius;
-      const py = Math.sin(angle) * p.orbitInclination * 2;
-      const dist = Math.sqrt(
-        (camPos.x - px) ** 2 + (camPos.y - py) ** 2 + (camPos.z - pz) ** 2
-      );
+      const planetPos = getPlanetOrbitPosition(p, clock.elapsedTime);
+      const dist = camPos.distanceTo(planetPos);
       if (dist < nearestDist) {
         nearestDist = dist;
         nearestPlanet = p;
@@ -214,10 +205,14 @@ interface GalaxyViewportProps {
 function Scene({ onFlightUpdate, onNearbyPlanet, inputRef, scanningPlanetId, warpTargetRef }: GalaxyViewportProps) {
   return (
     <>
-      <ambientLight intensity={0.12} />
-      <pointLight position={[0, 0, 0]} intensity={40} distance={40} color="#00e5ff" />
+      <fog attach="fog" args={['#020510', 80, 260]} />
+      <ambientLight intensity={0.18} />
+      <pointLight position={[0, 0, 0]} intensity={46} distance={62} color="#00e5ff" />
+      <pointLight position={[18, 18, -28]} intensity={12} distance={120} color="#ffd740" />
+      <pointLight position={[-42, -10, 36]} intensity={10} distance={150} color="#ff4081" />
 
       <Starfield3D />
+      <CosmicAtelier />
 
       <OrbitSystem
         planets={PLANETS}
@@ -244,8 +239,8 @@ export default function GalaxyViewport(props: GalaxyViewportProps) {
   return (
     <div className="absolute inset-0 z-[2]">
       <Canvas
-        camera={{ position: INITIAL_POS, fov: 60, near: 0.1, far: 300 }}
-        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
+        camera={{ position: INITIAL_POS, fov: 66, near: 0.1, far: 420 }}
+        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.35 }}
         style={{ background: 'transparent' }}
         onCreated={({ gl }) => {
           gl.setClearColor(new THREE.Color('#020510'), 0);
