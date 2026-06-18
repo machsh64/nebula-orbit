@@ -17,7 +17,8 @@ export default function CommandDeck({
 }: CommandDeckProps) {
   const isScanning = systemStatus === 'scanning';
   const isWarping = systemStatus === 'warping';
-  const isInRange = nearbyDistance < 3;
+  const proximityThreshold = nearbyPlanet ? nearbyPlanet.size * 2.5 : 5;
+  const isInRange = nearbyDistance < proximityThreshold;
 
   return (
     <div className="fixed bottom-14 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">

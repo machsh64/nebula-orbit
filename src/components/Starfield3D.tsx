@@ -11,8 +11,8 @@ export default function Starfield3D() {
     const col = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      // Spherical distribution - far out
-      const radius = 40 + Math.random() * 60;
+      // Spherical distribution - far beyond outermost orbit
+      const radius = 80 + Math.random() * 120;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 

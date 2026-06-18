@@ -86,12 +86,12 @@ export default function OrbitSystem({
 
       {/* Grid ring */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[20, 20.1, 128]} />
-        <meshBasicMaterial color="#00e5ff" transparent opacity={0.06} side={THREE.DoubleSide} depthWrite={false} />
+        <ringGeometry args={[50, 50.15, 128]} />
+        <meshBasicMaterial color="#00e5ff" transparent opacity={0.04} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[10, 10.05, 128]} />
-        <meshBasicMaterial color="#b388ff" transparent opacity={0.05} side={THREE.DoubleSide} depthWrite={false} />
+        <ringGeometry args={[25, 25.08, 128]} />
+        <meshBasicMaterial color="#b388ff" transparent opacity={0.04} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
 
       {/* Planets */}

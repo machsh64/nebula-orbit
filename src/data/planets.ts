@@ -18,12 +18,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#4dd0e1',
     glowColor: '#00e5ff',
     size: 1.8,
-    orbitRadius: 8,
-    orbitSpeed: 0.3,
+    orbitRadius: 20,
+    orbitSpeed: 0.25,
     ringColor: '#00e5ff',
     hasRings: true,
     ringWidth: 0.6,
-    orbitInclination: 0.15,
+    orbitInclination: -0.45,
     description: '一颗被深蓝海洋完全覆盖的超级地球。大气层富含氧气和水蒸气，检测到大量有机分子信号。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'N₂-O₂-H₂O · 1.2 atm', icon: 'Waves' },
@@ -51,12 +51,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#ff8a65',
     glowColor: '#ff6e40',
     size: 1.2,
-    orbitRadius: 5.5,
-    orbitSpeed: 0.7,
+    orbitRadius: 7,
+    orbitSpeed: 0.5,
     ringColor: '#ff6e40',
     hasRings: false,
     ringWidth: 0,
-    orbitInclination: -0.3,
+    orbitInclination: -0.80,
     description: '一颗年轻的熔岩行星，表面遍布活跃火山和岩浆河流。极端温室效应导致表面温度极高。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'CO₂-SO₂ · 8.5 atm', icon: 'Waves' },
@@ -84,12 +84,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#b388ff',
     glowColor: '#b388ff',
     size: 3.0,
-    orbitRadius: 12,
-    orbitSpeed: 0.15,
+    orbitRadius: 48,
+    orbitSpeed: 0.08,
     ringColor: '#b388ff',
     hasRings: true,
     ringWidth: 1.4,
-    orbitInclination: 0.08,
+    orbitInclination: 0.15,
     description: '一颗紫色调的巨型气态行星，大气中漂浮着离子化氨云层。拥有多层环系统。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'H₂-He-NH₃ · 22 atm', icon: 'Waves' },
@@ -117,12 +117,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#e0f7fa',
     glowColor: '#18ffff',
     size: 2.2,
-    orbitRadius: 15,
+    orbitRadius: 28,
     orbitSpeed: 0.18,
     ringColor: '#18ffff',
     hasRings: true,
     ringWidth: 0.9,
-    orbitInclination: -0.12,
+    orbitInclination: 0.35,
     description: '一颗极寒冰巨星，表面覆盖着氮冰和甲烷冰。探测到间歇性冰火山喷发。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'N₂-CH₄ · 0.6 atm', icon: 'Waves' },
@@ -150,12 +150,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#546e7a',
     glowColor: '#ff4081',
     size: 2.8,
-    orbitRadius: 19,
-    orbitSpeed: 0.08,
+    orbitRadius: 37,
+    orbitSpeed: 0.12,
     ringColor: '#ff4081',
     hasRings: false,
     ringWidth: 0,
-    orbitInclination: 0.5,
+    orbitInclination: -0.25,
     description: '一颗神秘的流浪行星，不围绕任何恒星运转。检测到无法解释的能量脉冲。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'Trace · <0.01 atm', icon: 'Waves' },
@@ -183,12 +183,12 @@ export const PLANETS: PlanetData[] = [
     tertiaryColor: '#b9f6ca',
     glowColor: '#00e676',
     size: 1.6,
-    orbitRadius: 10,
-    orbitSpeed: 0.25,
+    orbitRadius: 13,
+    orbitSpeed: 0.35,
     ringColor: '#00e676',
     hasRings: false,
     ringWidth: 0,
-    orbitInclination: -0.05,
+    orbitInclination: 0.60,
     description: '一颗与地球极为相似的绿色行星。液态水丰富，已被列为优先殖民候选星球。',
     scanParams: [
       { label: 'ATMOSPHERE', value: 'N₂-O₂ · 0.95 atm', icon: 'Waves' },
@@ -200,6 +200,21 @@ export const PLANETS: PlanetData[] = [
     ],
   },
 ];
+
+/**
+ * 轨道间距计算（按体积排序，含光环范围）：
+ *
+ *   Planet       Size  RingOuter  Effective  orbitR  Incl  |Y|max
+ *   ─────────    ────  ─────────  ─────────  ──────  ────  ──────
+ *   NOVA PRIME   1.2   —          1.56        7     -0.80  1.60
+ *   VERDANT-3    1.6   —          2.08       13      0.60  1.20
+ *   KEPLER-7X    1.8   3.6        2.34       20     -0.45  0.90
+ *   CRYO-11B     2.2   4.4        2.86       28      0.35  0.70
+ *   UMBRA-X      2.8   —          3.64       37     -0.25  0.50
+ *   AETHER-9     3.0   6.0        3.90       48      0.15  0.30
+ *
+ *   相邻轨道 XZ 最小间隙：2.4 ~ 3.5 单位，Y 轴倾角提供额外隔离
+ */
 
 // Central energy core
 export const CORE_DATA = {

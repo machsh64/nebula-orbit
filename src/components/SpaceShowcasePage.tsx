@@ -34,8 +34,9 @@ export default function SpaceShowcasePage() {
   }>({ keys: new Set(), mouse: { dx: 0, dy: 0 } });
   const warpTargetRef = useRef<string | null>(null);
 
-  // Track whether we're in scanning range for current target
-  const isInRange = nearbyDistance < 3;
+  // Dynamic proximity threshold based on current nearest planet
+  const proximityThreshold = nearbyPlanet ? nearbyPlanet.size * 2.5 : 5;
+  const isInRange = nearbyDistance < proximityThreshold;
 
   // ---- Keyboard Input Handler ----
   useEffect(() => {

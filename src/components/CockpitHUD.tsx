@@ -83,8 +83,10 @@ export default function CockpitHUD({
   const isScanning = systemStatus === 'scanning';
   const isWarping = systemStatus === 'warping';
   const statusColor = isScanning ? '#ffd740' : isWarping ? '#ff4081' : '#00e5ff';
-  const isInRange = nearbyDistance < 3;
-  const isProximity = nearbyDistance < 5;
+  // Dynamic proximity: bigger planets have wider detection range
+  const proximityThreshold = nearbyPlanet ? nearbyPlanet.size * 2.5 : 5;
+  const isInRange = nearbyDistance < proximityThreshold;
+  const isProximity = nearbyDistance < proximityThreshold * 1.5;
 
   return (
     <>
@@ -275,16 +277,17 @@ export default function CockpitHUD({
       </div>
 
       {/* ===== BOTTOM: SPEED & PITCH LADDER (centered, very subtle) ===== */}
-      <SpeedIndicator speed={flightState.speed} isBoosting={flightState.isBoosting} maxSpeed={25} boostMult={2.5} />
+      <SpeedIndicator speed={flightState.speed} isBoosting={flightState.isBoosting} maxSpeed={30} boostMult={2.5} />
     </>
   );
 }
 
 // ---- Proximity bar for each planet ----
 function ProximityBar({ planet, distance }: { planet: PlanetData; distance: number }) {
-  const maxDist = 20;
+  const maxDist = 30;
+  const proxThreshold = planet.size * 2.5;
   const pct = Math.max(0, Math.min(100, ((maxDist - distance) / maxDist) * 100));
-  const isClose = distance < 3;
+  const isClose = distance < proxThreshold;
 
   return (
     <div className="flex items-center gap-2">

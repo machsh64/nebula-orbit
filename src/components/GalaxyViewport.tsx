@@ -7,14 +7,13 @@ import Starfield3D from './Starfield3D';
 import OrbitSystem from './OrbitSystem';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 
-const INITIAL_POS = new THREE.Vector3(0, 8, 22);
-const MAX_SPEED = 25;
+const INITIAL_POS = new THREE.Vector3(0, 25, 65);
+const MAX_SPEED = 30;
 const BOOST_MULTIPLIER = 2.5;
 const MOUSE_SENSITIVITY = 0.002;
 const DAMPING = 0.92;
 const ACCELERATION = 0.8;
 const BRAKE_FORCE = 0.6;
-const PROXIMITY_RANGE = 4; // How close counts as "near planet"
 
 export interface FlightState {
   velocity: THREE.Vector3;
@@ -178,7 +177,7 @@ function FlightCamera({
       nearestPlanet = null;
     }
 
-    const isProximity = nearestDist < PROXIMITY_RANGE;
+    const isProximity = nearestDist < (nearestPlanet ? nearestPlanet.size * 2.5 : 5);
     onNearbyPlanet(isProximity ? nearestPlanet : null, nearestDist);
 
     // Flight state for HUD
@@ -198,7 +197,7 @@ function FlightCamera({
 function GridPlane() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-      <planeGeometry args={[50, 50]} />
+      <planeGeometry args={[120, 120]} />
       <meshBasicMaterial color="#00e5ff" transparent opacity={0.015} side={THREE.DoubleSide} depthWrite={false} />
     </mesh>
   );
